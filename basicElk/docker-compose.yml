@@ -1,0 +1,34 @@
+version: '3'
+
+volumes:
+  esdata:
+
+services:
+  elastic:
+    build:
+      context: elasticsearch/
+    ports:
+      - "9200:9200"
+
+  kibana:
+    build:
+       context: kibana/
+    links:
+      - elastic
+    environment:
+      - ELASTICSEARCH_URL=http://elastic:9200
+    ports:
+      - "5601:5601"
+
+  logstash:
+    build:
+       context: logstash/
+    volumes:
+      - ./data:/data
+      - ./logstash_conf:/conf
+    ports:
+      - "5000:5000/tcp"
+    command: bin/logstash -f /conf/logstash_cache_log_pipeline.conf
+    links:
+      - elastic
+      - kibana
